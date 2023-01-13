@@ -1,0 +1,60 @@
+service: localstack-lambda
+plugins:
+  - serverless-localstack
+  - serverless-dynamodb-local
+  - serverless-offline
+
+custom:
+  localstack:
+    debug: true
+    stages:
+      - local
+      - dev
+    endpointFile: localstak_endpoint.json
+  dynamodb:
+    stages:
+      - dev
+    start:
+      port: 8000
+      inMemory: true
+      heapInitial: 200m
+      heapMax: 1g
+      convertEmptyValues: true
+
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+
+functions:
+  hello:
+    handler: src/handler.hello
+    events:
+      - http:
+          path: hello
+          method: get
+
+  getTasks:
+    handler: src/getTasks.getTasks
+    events:
+      - http:
+          path: /music
+          method: get
+
+resources:
+  Resources:
+    usersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: usersTable
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
